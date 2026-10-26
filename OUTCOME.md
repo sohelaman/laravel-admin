@@ -6,7 +6,7 @@ State: all changes are in the working tree, **nothing is committed** (85 changed
 
 ## 1. Verdict
 
-The package installs and runs on Laravel `^13.0` / PHP `^8.5`, the test suite passes on SQLite and on MySQL 8.4 (111 tests each, no deprecations, no warnings) and is stable in random order. The review found and fixed several defects that the suite did not cover, three of them security issues (section 4).
+The package installs and runs on Laravel `^13.0` / PHP `^8.5`, the test suite passes on SQLite and on MySQL 8.4 (117 tests each, no deprecations, no warnings) and is stable in random order. The review found and fixed several defects that the suite did not cover, three of them security issues (section 4).
 
 It is **not release-ready** until the items marked "before release" in section 5 are done: CI has never run, PostgreSQL has not been tested, and the fork's package name and version are not decided.
 
@@ -14,8 +14,8 @@ It is **not release-ready** until the items marked "before release" in section 5
 
 | Check | Result |
 | --- | --- |
-| `vendor/bin/phpunit` (SQLite) | **OK (111 tests, 1103 assertions)**, exit 0 |
-| `vendor/bin/phpunit` (MySQL 8.4) | **OK (111 tests, 1098 assertions)**, default order; random order seed 9: OK (111 tests, 1100 assertions) |
+| `vendor/bin/phpunit` (SQLite) | **OK (117 tests, 1125 assertions)**, exit 0 |
+| `vendor/bin/phpunit` (MySQL 8.4) | **OK (117 tests, 1125 assertions)**, default order; random order (SQLite, seed 17) also OK |
 | Strictness | `failOnDeprecation`, `failOnWarning`, `failOnNotice`, `failOnRisky` are on; PHPUnit's own error handler is restored so Laravel does not swallow deprecations |
 | Random order | `--order-by=random` with 11 different seeds: all green after the fixes of section 4.1 (several early runs failed, see 4.1) |
 | Repeatability | 3 consecutive default runs and 6 random runs give identical assertion counts (the factories are seeded) |
@@ -26,7 +26,7 @@ It is **not release-ready** until the items marked "before release" in section 5
 | Front-end `npm audit` of the shipped libraries | 1 moderate advisory left: Bootstrap 3.4.1 (end of life, no fix) |
 | Workflow files | `.github/workflows/tests.yml` and `dependabot.yml` parse as YAML; the workflow was **not executed** |
 
-Database: SQLite in memory for the default run. **MySQL 8.4 was also tested** (2026-10-27): the same 111 tests pass against a throwaway `mysql:8.4` container (default order, and random order with seed 5), with the server confirming about 1900 `CREATE TABLE` statements per run. Command: `DB_CONNECTION=mysql MYSQL_HOST=127.0.0.1 MYSQL_PORT=33306 MYSQL_USER=root vendor/bin/phpunit` (the base class now reads `MYSQL_PORT` / `PGSQL_PORT`). The container was removed afterwards. PostgreSQL has not been run. The suite only drops tables of a database whose name contains `test`.
+Database: SQLite in memory for the default run. **MySQL 8.4 was also tested** (2026-10-27): the same 117 tests pass against a throwaway `mysql:8.4` container (default order, and random order with seed 5), with the server confirming about 1900 `CREATE TABLE` statements per run. Command: `DB_CONNECTION=mysql MYSQL_HOST=127.0.0.1 MYSQL_PORT=33306 MYSQL_USER=root vendor/bin/phpunit` (the base class now reads `MYSQL_PORT` / `PGSQL_PORT`). The container was removed afterwards. PostgreSQL has not been run. The suite only drops tables of a database whose name contains `test`.
 
 Tests by area (108 methods plus data sets; the displayers test gained a case for `HtmlString` in `label()`/`badge()`, which the earlier `UPGRADE.md` promised but the code did not honour): Assets 4, Auth 6, Console 4, File upload 7, Flash messages 7, Grid displayers 5, Handle controller 5, Image upload 9, Index 2, Install 1, Menu 6, Model tree 1, Operation log 5, Pjax 3, Permissions 7, Roles 5, Thumbnails 3, User form 7, User grid 14, User setting 5, Users 4.
 
@@ -54,6 +54,10 @@ Tests by area (108 methods plus data sets; the displayers test gained a case for
 | 10 | Test quality | The suite was order dependent: `MenuTest::testMenuIndex` asserted on a string that only appeared through static `Admin` state left by earlier tests; `testLikeFilter` depended on random faker data (flaky); the first test of a process saw untranslated strings; a new upload test depended on a directory existing. | Admin static state is reset around each test, faker is seeded, the translator cache is flushed after publishing, assertions corrected. |
 
 Also corrected in this pass: stale statements in `README.md` and `docs/en/README.md` (PHP 7 / Laravel 5.5, Travis badge).
+
+### 4.1b External sources removed (2026-10-27)
+
+The front-end was scanned for anything loaded from another origin. Removed: `html5shiv`/`respond.js` from a CDN, the QR code service (`api.qrserver.com`, which received the cell content), Gravatar (leaked email hashes), CKEditor 4.5 from `cdn.ckeditor.com` (replaced by a local Summernote 0.9), and the map provider script that was added to every admin page when the `map` field was registered (now opt-in through `allow_external_map_api`). `tests/AssetsTest.php` enforces it (source scan, stylesheet scan, crawl of the admin pages). Details: `docs/frontend-dependency-audit.md` section 6b and `UPGRADE.md`.
 
 ### 4.2 Fixed earlier (see `docs/` for details)
 

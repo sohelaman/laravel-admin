@@ -27,6 +27,10 @@ The files in this directory are copied from the npm packages below (the `dist` /
 | `nprogress` | `nprogress` | 0.2.0 | |
 | `sweetalert2` | `sweetalert2` | 11.26.25 | `window.swal` is a compatibility wrapper (`laravel-admin.js`) |
 | `toastr` | `toastr` | 2.1.4 | |
+| `qrcode-generator` | `qrcode-generator` | 2.0.4 | QR codes of the grid `qrcode()` displayer, generated in the browser |
+| `summernote` | `summernote` | 0.9.1 | `summernote-lite` build and its icon font, used by the `editor` field (replaces CKEditor 4 loaded from a CDN) |
 | `number-input`, `google-fonts`, `laravel-admin` | - | - | maintained in this repository |
+
+No asset is loaded from another origin (CDN, font service, image service): `tests/AssetsTest.php` scans the sources, views, stylesheets and rendered pages. The map field is the only exception and is disabled by default (`allow_external_map_api`).
 
 To check the libraries for known vulnerabilities, install the packages of the table in an empty directory and run `npm audit`.

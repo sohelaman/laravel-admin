@@ -25,6 +25,8 @@ class DisplayerController extends AdminController
             return new \Illuminate\Support\HtmlString('<b class="trusted">ok</b>');
         })->label();
 
+        $grid->column('created_at', 'Avatar')->gravatar(40);
+
         $grid->disableFilter();
 
         return $grid;

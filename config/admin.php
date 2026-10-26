@@ -276,6 +276,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Allow the map field to load the API of the map provider
+    |--------------------------------------------------------------------------
+    |
+    | The map field is the only component that needs a third party server (the
+    | scripts and tiles of the provider above). Nothing else of the admin loads
+    | a script, style, font or image from another origin. Keep it false unless
+    | you accept that the browsers of your administrators contact the provider.
+    |
+    */
+    'allow_external_map_api' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Skin
     |--------------------------------------------------------------------------
     |

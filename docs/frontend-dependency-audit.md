@@ -64,6 +64,23 @@ See `resources/assets/VERSIONS.md` for the full list. Main changes: jQuery 2.1.4
 
 Not verified: Internet Explorer and old browsers (jQuery 3 and select2 4.1 do not support them), slider dragging, flatpickr (no field of the package uses it by default), date/time pickers in a locale other than English, the `admin:minify` command with the new files.
 
+## 6b. External sources (added 2026-10-27)
+
+A second pass looked for everything the admin loads from another origin (scripts, styles, fonts, images, iframes, API calls). Found and removed:
+
+| Source | Used by | Now |
+| --- | --- | --- |
+| `oss.maxcdn.com` html5shiv / respond.js | layout and login page (IE8) | removed |
+| `api.qrserver.com` | grid `qrcode()` displayer, sent the cell content to a third party | generated in the browser with `qrcode-generator` 2.0.4 |
+| `www.gravatar.com` | grid `gravatar()` displayer, leaked the email hash | local generated avatar |
+| `cdn.ckeditor.com` (CKEditor 4.5.10, many XSS advisories) | `editor` field | Summernote 0.9.1 lite, local (CKEditor 4.22.1, the last open-source release, still has advisories that are fixed only in the commercial LTS) |
+| `maps.googleapis.com`, `map.qq.com`, `api-maps.yandex.ru` | `map` field; the script was added to **every** admin page when the field was registered | disabled unless `allow_external_map_api` is true (the only exception, a map service cannot be local) |
+
+Already local: Font Awesome 4.7 and Source Sans Pro (`google-fonts/fonts.css` points to local `fonts/`), AdminLTE and Bootstrap images and glyphicons, all plugins. The stylesheets of the shipped libraries contain no `url(http...)` or `@import`; the links in comments and in the dashboard/footer are plain hyperlinks, not loaded resources.
+Not changed: bootstrap-fileinput can preview Office and Google documents through `view.officeapps.live.com` / `docs.google.com` iframes, but only if `allowedPreviewTypes` includes `office` or `gdocs`, which the package never sets.
+
+Enforced by `tests/AssetsTest.php` (source scan, stylesheet scan, and the pages of the admin are crawled for any `src`/`href` of another host) and checked in a browser with the Resource Timing API (every request of the form and grid pages had the origin of the application).
+
 ## 7. Differences users will see
 
 - Currency masks do not show `0.00` until the field gets the focus; the slider uses the `round` skin; colour fields start empty instead of black; the select2 multiple choices show the remove button before the text; file inputs use the 5.x layout.

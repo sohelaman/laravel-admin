@@ -50,6 +50,17 @@ The bundled libraries were upgraded (jQuery 3.7.1, Bootstrap 3.4.1, AdminLTE 2.4
 - The message of `admin_toastr()` is written as a JSON string in the page, HTML in it still works.
 - jQuery 3 removed `.load()`, `.error()`, `.success()` and `.size()`; extensions using them have to change.
 
+### No external assets
+
+Every script, stylesheet, font and image of the admin is served from your own server; nothing is loaded from a CDN or a third party (`tests/AssetsTest.php` enforces it). What changed:
+
+- The `html5shiv` / `respond.js` scripts of the layout and login page (loaded from a CDN for Internet Explorer 8) are removed.
+- The grid `qrcode()` displayer no longer sends the content to `api.qrserver.com`: the code is generated in the browser (`qrcode-generator`). The markup is `<a data-qrcode="...">` instead of a popover with an image url.
+- The grid `gravatar()` displayer no longer asks `gravatar.com` (which leaks the hash of the email address): it draws a local avatar with the initial of the value on a colour taken from its hash.
+- The `editor` field uses Summernote 0.9 (`summernote-lite`, local) instead of CKEditor 4.5 loaded from `cdn.ckeditor.com`. Its options are the Summernote ones (`->options(['height' => 400])`). The field still has to be registered with `Form::extend('editor', Field\Editor::class)` as before. Content saved by CKEditor is plain HTML and opens as before.
+- The `map` field needs the servers of Google, Tencent or Yandex (scripts and tiles) and cannot be served locally. It is disabled by default: without `'allow_external_map_api' => true` in `config/admin.php` the field renders its latitude/longitude inputs and a notice, and loads nothing. Previously its provider script was added to every admin page whenever the field was registered.
+- Minified libraries no longer carry a `sourceMappingURL` comment to a map file that was never shipped.
+
 ### Security hardening
 
 - The grid sort (`_sort[column]`, `_sort[type]`, `_sort[cast]`) is validated: the column has to be a column name (or a path in a json column), the direction `asc` or `desc`, the cast one of `signed`, `unsigned`, `char`, `binary`, `date`, `datetime`, `time`, `json`, `decimal(m,n)`. Other values are ignored; they were written in the query.

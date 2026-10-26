@@ -201,7 +201,10 @@ trait ExtendDisplay
     }
 
     /**
-     * Display the fields in the email format as gavatar.
+     * Display the fields in the email format as an avatar.
+     *
+     * The avatar is generated here (the initial of the value on a colour taken from its hash),
+     * the email is not sent to a third party service like Gravatar.
      *
      * @param int $size
      *
@@ -210,13 +213,22 @@ trait ExtendDisplay
     public function gravatar($size = 30)
     {
         return $this->display(function ($value) use ($size) {
-            $src = sprintf(
-                'https://www.gravatar.com/avatar/%s?s=%d',
-                md5(strtolower($value)),
-                $size
+            $value = strtolower(trim((string) $value));
+            $hue = hexdec(substr(md5($value), 0, 2)) / 255 * 360;
+            $initial = e(mb_strtoupper(mb_substr($value, 0, 1)) ?: '?');
+
+            $svg = sprintf(
+                "<svg xmlns='http://www.w3.org/2000/svg' width='%1\$d' height='%1\$d' viewBox='0 0 100 100'>"
+                ."<rect width='100' height='100' fill='hsl(%2\$d,45%%,40%%)'/>"
+                ."<text x='50' y='50' dy='.35em' text-anchor='middle' font-family='sans-serif' font-size='56' fill='#fff'>%3\$s</text></svg>",
+                (int) $size,
+                (int) $hue,
+                $initial
             );
 
-            return "<img src='$src' class='img img-circle'/>";
+            $src = 'data:image/svg+xml;base64,'.base64_encode($svg);
+
+            return "<img src='$src' width='".(int) $size."' height='".(int) $size."' class='img img-circle'/>";
         });
     }
 

@@ -289,6 +289,7 @@ If you register your own copies of assets, these paths changed:
 | **Slider field** | Options are the ion.rangeSlider 2 ones, skin `round` | `->options([...])` calls: names `prettify`/`hasGrid` are translated, other 1.x names are not |
 | **Masks** | inputmask 5: a currency field shows no `0.00` until it gets the focus; aliases (`ip`, `email`, `url`, `integer`, `decimal`, `currency`, `mac`, `percentage`) unchanged; option names follow inputmask 5 (`prefix`, `radixPoint`, `digits`, `groupSeparator`, `removeMaskOnSubmit`) | `->inputmask([...])`, `->currency()`, `->decimal()` with custom options |
 | **Colour field** | Starts empty instead of black | |
+| **External services** | No CDN or third party is contacted any more. `qrcode()` generates the code in the browser, `gravatar()` draws a local avatar (no Gravatar request), the `editor` field is Summernote (was CKEditor 4 from a CDN), `html5shiv`/`respond` were removed. The `map` field loads nothing unless `allow_external_map_api` is `true` in `config/admin.php` | `grep -rnE "gravatar\(|qrcode\(|editor\(|map\(" app/Admin`; set `allow_external_map_api` if you use `->map()`; options passed to the editor are now Summernote options; a Content-Security-Policy can use `default-src 'self'` (plus the map provider if enabled) |
 | **Icon field** | Stores the Font Awesome 4 class as before (`fa-pencil`) | |
 | **Toastr messages** | Written as a JSON string, HTML in the message still works | Messages containing quotes are now safe |
 | **Dashboard** | Does not fail when `composer.json` has no `require` | |

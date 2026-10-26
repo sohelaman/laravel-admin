@@ -57,12 +57,23 @@ class GridDisplayerTest extends TestCase
         $this->assertSame('x" onmouseover="alert(1)" data-x="', $link->attr('data-content'));
     }
 
-    public function testQrCodeDataIsEncoded()
+    public function testQrCodeIsGeneratedInTheBrowser()
     {
-        $popover = $this->crawler()->filter('a.grid-column-qrcode')->attr('data-content');
+        $link = $this->crawler()->filter('a.grid-column-qrcode');
 
-        $this->assertStringContainsString(rawurlencode("a'b&data=".$this->payload), $popover);
-        $this->assertStringNotContainsString($this->payload, $popover);
+        // the content stays on the page, it is not sent to a QR code service
+        $this->assertSame("a'b&data=".$this->payload, $link->attr('data-qrcode'));
+        $this->assertStringNotContainsString('qrserver', $this->response->getContent());
+        $this->assertStringContainsString('qrcode-generator/qrcode.js', $this->response->getContent());
+    }
+
+    public function testAvatarIsGeneratedLocally()
+    {
+        $image = $this->crawler()->filter('table.table td img.img-circle');
+
+        $this->assertCount(1, $image);
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', $image->attr('src'));
+        $this->assertStringNotContainsString('gravatar', $this->response->getContent());
     }
 
     public function testLinkDoesNotRunScripts()

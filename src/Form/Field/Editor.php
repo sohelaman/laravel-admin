@@ -6,13 +6,28 @@ use Encore\Admin\Form\Field;
 
 class Editor extends Field
 {
+    protected static $css = [
+        '/vendor/laravel-admin/summernote/summernote-lite.min.css',
+    ];
+
     protected static $js = [
-        '//cdn.ckeditor.com/4.5.10/standard/ckeditor.js',
+        '/vendor/laravel-admin/summernote/summernote-lite.min.js',
+    ];
+
+    /**
+     * Options of Summernote, https://summernote.org/deep-dive/.
+     *
+     * @var array
+     */
+    protected $options = [
+        'height' => 300,
     ];
 
     public function render()
     {
-        $this->script = "CKEDITOR.replace('{$this->id}');";
+        $options = json_encode($this->options);
+
+        $this->script = "$('#{$this->id}').summernote({$options});";
 
         return parent::render();
     }

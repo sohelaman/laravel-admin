@@ -12,7 +12,7 @@ Goal of the fork (`NOTES.md`): keep the package usable on **Laravel 13 and PHP 8
 
 Current state (see `OUTCOME.md` for the details):
 - Upgrade work is done and **uncommitted in the working tree**; the maintainer reviews it before committing.
-- Suite: 111 tests, green on SQLite and on MySQL 8.4, stable in random order. PostgreSQL and the CI workflow (`.github/workflows/tests.yml`) have never been run.
+- Suite: 117 tests, green on SQLite and on MySQL 8.4, stable in random order. PostgreSQL and the CI workflow (`.github/workflows/tests.yml`) have never been run.
 - Open items: fork package name and release tag, PostgreSQL run, Bootstrap 3 end-of-life advisory, untested areas (section "Known gaps").
 
 ## Documents (where to look)
@@ -76,6 +76,7 @@ The suite is strict: `phpunit.xml.dist` fails on deprecations, warnings, notices
 
 - Match the surrounding code (original author's style, StyleCI/Laravel preset): 4 spaces, PSR-4 `Encore\Admin\`, short arrays, aligned `=>` in multi-line arrays, no space after `!`, docblocks with `@param`/`@return` in the existing format, comments sparse. No PHP-CS-Fixer is installed; copy the style of neighbouring files.
 - Targets PHP 8.5: optional typed parameters must be explicit nullable (`?Closure $callback = null`); declare properties (no dynamic properties); do not pass `null` to string functions.
+- **No external assets**: never add a CDN/third-party script, style, font, image or API call (tests enforce it); vendor the library into `resources/assets` instead. The `map` field is the only, opt-in, exception.
 - Escape output. Blade `{!! !!}` is only for HTML that the developer wrote. Anything coming from the database, the request or flash messages must be escaped (`e()`, `{{ }}`, `@json`). Grid displayers escape their value (an `HtmlString` passes through). Never write request input into SQL, JS or class names unvalidated.
 - Flash messages are stored as **arrays** (`admin_toastr`, `admin_success`..., `Exception\Handler::error`) because Laravel 13 sessions are JSON; read them with `admin_message_bag()`.
 - Use `$.admin.swal(...)` (wrapper of sweetalert2 11) rather than the `swal` global in new JS; `$.isArray`/`.unbind` style jQuery-3-deprecated calls should not be added.

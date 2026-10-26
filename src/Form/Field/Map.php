@@ -25,6 +25,11 @@ class Map extends Field
      */
     public static function getAssets()
     {
+        // The scripts are served by the map provider, see `allow_external_map_api` in config/admin.php.
+        if (!config('admin.allow_external_map_api', false)) {
+            return [];
+        }
+
         switch (config('admin.map_provider')) {
             case 'tencent':
                 $js = '//map.qq.com/api/js?v=2.exp&key='.env('TENCENT_MAP_API_KEY');
@@ -51,6 +56,13 @@ class Map extends Field
 
         $this->label = $this->formatLabel($arguments);
         $this->id = $this->formatId($this->column);
+
+        // The map scripts and tiles are served by a third party, only use them when that is accepted.
+        if (!config('admin.allow_external_map_api', false)) {
+            $this->script = "$('#map_{$this->id['lat']}{$this->id['lng']}').text('The map is disabled (allow_external_map_api).');";
+
+            return;
+        }
 
         /*
          * Google map is blocked in mainland China
