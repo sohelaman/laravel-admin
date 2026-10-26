@@ -33,18 +33,23 @@ SCRIPT;
         }
 
         $img = sprintf(
-            "<img src='https://api.qrserver.com/v1/create-qr-code/?size=%sx%s&data=%s' style='height:%spx;width:%spx;'/>",
+            "<img src='https://api.qrserver.com/v1/create-qr-code/?size=%dx%d&data=%s' style='height:%dpx;width:%dpx;'/>",
             $width,
             $height,
-            $content,
+            rawurlencode($content),
             $height,
             $width
         );
 
+        // the image is the content of a popover and is written in an html attribute
+        $img = e($img);
+
+        $value = e($this->getValue());
+
         return <<<HTML
 <a href="javascript:void(0);" class="grid-column-qrcode text-muted" data-content="{$img}" data-toggle='popover' tabindex='0'>
     <i class="fa fa-qrcode"></i>
-</a>&nbsp;{$this->getValue()}
+</a>&nbsp;{$value}
 HTML;
     }
 }

@@ -12,17 +12,18 @@
         }
     ],
     "require": {
-        "php": ">=7.0.0",
-        "symfony/dom-crawler": "~3.1|~4.0|~5.0",
-        "laravel/framework": ">=5.5",
-        "doctrine/dbal": "2.*|3.*"
+        "php": "^8.5",
+        "laravel/framework": "^13.0",
+        "symfony/dom-crawler": "^7.4|^8.0",
+        "symfony/css-selector": "^7.4|^8.0"
     },
     "require-dev": {
-        "laravel/laravel": ">=5.5",
-        "fzaninotto/faker": "~1.4",
-        "intervention/image": "~2.3",
-        "laravel/browser-kit-testing": "^6.0",
-        "spatie/phpunit-watcher": "^1.22.0"
+        "fakerphp/faker": "^1.23",
+        "intervention/image": "^4.0",
+        "intervention/image-laravel": "^4.0",
+        "laravel/browser-kit-testing": "^7.2",
+        "orchestra/testbench": "^11.0",
+        "spatie/phpunit-watcher": "^1.24"
     },
     "autoload": {
         "psr-4": {
@@ -35,7 +36,8 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\Models\\": "tests/models",
-            "Tests\\Controllers\\": "tests/controllers"
+            "Tests\\Controllers\\": "tests/controllers",
+            "Tests\\Factories\\": "tests/factories"
         },
         "classmap": [
             "tests/TestCase.php"
@@ -45,7 +47,9 @@
         "test": "./vendor/bin/phpunit"
     },
     "suggest": {
-        "intervention/image": "Required to handling and manipulation upload images (~2.3).",
+        "intervention/image": "Required to handling and manipulation upload images (^4.0).",
+        "intervention/image-laravel": "Laravel integration for intervention/image (^4.0).",
+        "maatwebsite/excel": "Required by the Excel grid exporter.",
         "spatie/eloquent-sortable": "Required to built orderable gird."
     },
     "extra": {

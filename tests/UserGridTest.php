@@ -51,11 +51,11 @@ class UserGridTest extends TestCase
 
     protected function seedsTable($count = 100)
     {
-        factory(\Tests\Models\User::class, $count)
+        \Tests\Models\User::factory()->count($count)
             ->create()
             ->each(function ($u) {
-                $u->profile()->save(factory(\Tests\Models\Profile::class)->make());
-                $u->tags()->saveMany(factory(\Tests\Models\Tag::class, 5)->make());
+                $u->profile()->save(\Tests\Models\Profile::factory()->make());
+                $u->tags()->saveMany(\Tests\Models\Tag::factory()->count(5)->make());
                 $u->data = ['json' => ['field' => random_int(0, 50)]];
                 $u->save();
             });
@@ -109,6 +109,46 @@ class UserGridTest extends TestCase
         }
     }
 
+    /**
+     * The sort comes from the query string and is written in the query.
+     */
+    public function testSortInputIsNotWrittenInTheQuery()
+    {
+        $this->seedsTable(3);
+
+        $payloads = [
+            '_sort[column]=id&_sort[type]=desc,(select sleep(5))',
+            "_sort[column]=data.json.field')),(select sleep(5)),JSON_EXTRACT(data,'$&_sort[type]=desc",
+            '_sort[column]=data.json.field&_sort[type]=desc&_sort[cast]=unsigned)),(select sleep(5)',
+            '_sort[column][]=id&_sort[type]=desc',
+        ];
+
+        foreach ($payloads as $payload) {
+            \DB::enableQueryLog();
+
+            $this->get('admin/users?'.$payload);
+
+            $this->assertResponseOk();
+
+            foreach (\DB::getQueryLog() as $query) {
+                $this->assertStringNotContainsStringIgnoringCase('sleep', $query['query']);
+            }
+
+            \DB::flushQueryLog();
+        }
+    }
+
+    public function testSortWithAllowedValues()
+    {
+        $this->seedsTable(3);
+
+        $this->get('admin/users?_sort[column]=id&_sort[type]=DESC');
+        $this->assertResponseOk();
+
+        $this->get('admin/users?_sort[column]=data.json.field&_sort[type]=asc&_sort[cast]=decimal(10,2)');
+        $this->assertResponseOk();
+    }
+
     public function testEqualFilter()
     {
         $this->seedsTable(50);
@@ -129,12 +169,12 @@ class UserGridTest extends TestCase
             ->seeInElement('td', $user->mobile)
             ->seeElement("img[src='{$user->avatar}']")
             ->seeInElement('td', "{$user->profile->first_name} {$user->profile->last_name}")
-            ->seeInElement('td', $user->postcode)
-            ->seeInElement('td', $user->address)
+            ->seeInElement('td', $user->profile->postcode)
+            ->seeInElement('td', $user->profile->address)
             ->seeInElement('td', "{$user->profile->latitude} {$user->profile->longitude}")
-            ->seeInElement('td', $user->color)
-            ->seeInElement('td', $user->start_at)
-            ->seeInElement('td', $user->end_at);
+            ->seeInElement('td', $user->profile->color)
+            ->seeInElement('td', $user->profile->start_at)
+            ->seeInElement('td', $user->profile->end_at);
     }
 
     public function testLikeFilter()
@@ -170,12 +210,12 @@ class UserGridTest extends TestCase
             ->seeInElement('td', $user->mobile)
             ->seeElement("img[src='{$user->avatar}']")
             ->seeInElement('td', "{$user->profile->first_name} {$user->profile->last_name}")
-            ->seeInElement('td', $user->postcode)
-            ->seeInElement('td', $user->address)
+            ->seeInElement('td', $user->profile->postcode)
+            ->seeInElement('td', $user->profile->address)
             ->seeInElement('td', "{$user->profile->latitude} {$user->profile->longitude}")
-            ->seeInElement('td', $user->color)
-            ->seeInElement('td', $user->start_at)
-            ->seeInElement('td', $user->end_at);
+            ->seeInElement('td', $user->profile->color)
+            ->seeInElement('td', $user->profile->start_at)
+            ->seeInElement('td', $user->profile->end_at);
     }
 
     public function testDisplayCallback()
@@ -193,11 +233,11 @@ class UserGridTest extends TestCase
 
     public function testHasManyRelation()
     {
-        factory(\Tests\Models\User::class, 10)
+        \Tests\Models\User::factory()->count(10)
             ->create()
             ->each(function ($u) {
-                $u->profile()->save(factory(\Tests\Models\Profile::class)->make());
-                $u->tags()->saveMany(factory(\Tests\Models\Tag::class, 5)->make());
+                $u->profile()->save(\Tests\Models\Profile::factory()->make());
+                $u->tags()->saveMany(\Tests\Models\Tag::factory()->count(5)->make());
             });
 
         $this->visit('admin/users')

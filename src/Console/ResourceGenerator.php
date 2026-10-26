@@ -21,14 +21,28 @@ class ResourceGenerator
     ];
 
     /**
+     * Generic column types, keyed by the native types reported by the database.
+     *
      * @var array
      */
-    private $doctrineTypeMapping = [
-        'string' => [
-            'enum', 'geometry', 'geometrycollection', 'linestring',
-            'polygon', 'multilinestring', 'multipoint', 'multipolygon',
-            'point',
+    private $columnTypeMapping = [
+        'string'   => [
+            'varchar', 'char', 'bpchar', 'character varying', 'character', 'uuid', 'citext', 'inet', 'cidr',
+            'macaddr', 'enum', 'geometry', 'geometrycollection', 'linestring', 'polygon', 'multilinestring',
+            'multipoint', 'multipolygon', 'point', 'nvarchar', 'nchar',
         ],
+        'text'     => ['text', 'tinytext', 'mediumtext', 'longtext', 'ntext'],
+        'blob'     => ['blob', 'tinyblob', 'mediumblob', 'longblob', 'bytea', 'binary', 'varbinary'],
+        'boolean'  => ['bool', 'boolean', 'bit', 'tinyint'],
+        'smallint' => ['smallint', 'int2', 'year'],
+        'integer'  => ['int', 'integer', 'mediumint', 'int4', 'serial'],
+        'bigint'   => ['bigint', 'int8', 'bigserial'],
+        'decimal'  => ['decimal', 'numeric', 'money'],
+        'float'    => ['float', 'double', 'double precision', 'real', 'float4', 'float8'],
+        'datetime' => ['datetime', 'datetime2', 'timestamp', 'timestamptz', 'timestamp without time zone', 'timestamp with time zone'],
+        'date'     => ['date'],
+        'time'     => ['time', 'timetz', 'time without time zone', 'time with time zone'],
+        'json'     => ['json', 'jsonb'],
     ];
 
     /**
@@ -83,12 +97,12 @@ class ResourceGenerator
         $output = '';
 
         foreach ($this->getTableColumns() as $column) {
-            $name = $column->getName();
+            $name = $column['name'];
             if (in_array($name, $reservedColumns)) {
                 continue;
             }
-            $type = $column->getType()->getName();
-            $default = $column->getDefault();
+            $type = $column['type'];
+            $default = $column['default'];
 
             $defaultValue = '';
 
@@ -111,7 +125,7 @@ class ResourceGenerator
                             break;
                         }
                     }
-                    $defaultValue = "'{$default}'";
+                    $defaultValue = var_export((string) $default, true);
                     break;
                 case 'integer':
                 case 'bigint':
@@ -142,10 +156,12 @@ class ResourceGenerator
                     break;
                 default:
                     $fieldType = 'text';
-                    $defaultValue = "'{$default}'";
+                    $defaultValue = var_export((string) $default, true);
             }
 
-            $defaultValue = $defaultValue ?: $default;
+            if (!$defaultValue && $default !== null) {
+                $defaultValue = is_numeric($default) ? $default : var_export((string) $default, true);
+            }
 
             $label = $this->formatLabel($name);
 
@@ -166,7 +182,7 @@ class ResourceGenerator
         $output = '';
 
         foreach ($this->getTableColumns() as $column) {
-            $name = $column->getName();
+            $name = $column['name'];
 
             // set column label
             $label = $this->formatLabel($name);
@@ -184,7 +200,7 @@ class ResourceGenerator
         $output = '';
 
         foreach ($this->getTableColumns() as $column) {
-            $name = $column->getName();
+            $name = $column['name'];
             $label = $this->formatLabel($name);
 
             $output .= sprintf($this->formats['grid_column'], $name, $label);
@@ -207,37 +223,59 @@ class ResourceGenerator
     /**
      * Get columns of a giving model.
      *
-     * @throws \Exception
+     * Each column is an array with the `name`, generic `type` and `default` value.
      *
-     * @return \Doctrine\DBAL\Schema\Column[]
+     * @return array
      */
     protected function getTableColumns()
     {
-        if (!$this->model->getConnection()->isDoctrineAvailable()) {
-            throw new \Exception(
-                'You need to require doctrine/dbal: ~2.3 in your own composer.json to get database columns. '
-            );
-        }
+        $columns = $this->model->getConnection()->getSchemaBuilder()->getColumns($this->model->getTable());
 
-        $table = $this->model->getConnection()->getTablePrefix().$this->model->getTable();
-        /** @var \Doctrine\DBAL\Schema\MySqlSchemaManager $schema */
-        $schema = $this->model->getConnection()->getDoctrineSchemaManager($table);
+        return array_map(function ($column) {
+            return [
+                'name'    => $column['name'],
+                'type'    => $this->getColumnType($column),
+                'default' => $this->getColumnDefault($column),
+            ];
+        }, $columns);
+    }
 
-        // custom mapping the types that doctrine/dbal does not support
-        $databasePlatform = $schema->getDatabasePlatform();
+    /**
+     * Resolve the generic type of a column reported by the schema builder.
+     *
+     * @param array $column
+     *
+     * @return string
+     */
+    protected function getColumnType(array $column)
+    {
+        $type = strtolower($column['type_name']);
 
-        foreach ($this->doctrineTypeMapping as $doctrineType => $dbTypes) {
-            foreach ($dbTypes as $dbType) {
-                $databasePlatform->registerDoctrineTypeMapping($dbType, $doctrineType);
+        foreach ($this->columnTypeMapping as $genericType => $nativeTypes) {
+            if (in_array($type, $nativeTypes, true)) {
+                return $genericType;
             }
         }
 
-        $database = null;
-        if (strpos($table, '.')) {
-            list($database, $table) = explode('.', $table);
+        return 'string';
+    }
+
+    /**
+     * Get the default value of a column without the quotes added by some drivers.
+     *
+     * @param array $column
+     *
+     * @return string|null
+     */
+    protected function getColumnDefault(array $column)
+    {
+        $default = $column['default'] ?? null;
+
+        if (is_string($default) && strlen($default) > 1 && $default[0] === "'" && substr($default, -1) === "'") {
+            return substr($default, 1, -1);
         }
 
-        return $schema->listTableColumns($table, $database);
+        return $default;
     }
 
     /**

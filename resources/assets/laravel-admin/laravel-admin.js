@@ -57,6 +57,14 @@ $(document).on('pjax:send', function (xhr) {
     NProgress.start();
 });
 
+// bootstrap-colorpicker triggers an event named `showPicker`, which jQuery would also call
+// as the native HTMLInputElement.showPicker() method of the browsers.
+$.event.special.showPicker = {
+    _default: function () {
+        return true;
+    }
+};
+
 $(document).on('pjax:complete', function (xhr) {
     if (xhr.relatedTarget && xhr.relatedTarget.tagName && xhr.relatedTarget.tagName.toLowerCase() === 'form') {
         $submit_btn = $('form[pjax-container] :submit');
@@ -94,7 +102,8 @@ $(function () {
             return;
         }
 
-        var regex = new RegExp(text, 'i');
+        // the text typed by the user is not a regular expression
+        var regex = new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
         var matched = false;
 
         $menu.find('li').each(function () {
@@ -156,7 +165,18 @@ $('#totop').on('click', function (e) {
 
     $.fn.admin = LA;
     $.admin = LA;
-    $.admin.swal = swal;
+    // sweetalert2 >= 8 renamed the `type` option to `icon`, the old name is still accepted.
+    $.admin.swal = function () {
+        var args = Array.prototype.slice.call(arguments);
+
+        if (args[0] !== null && typeof args[0] === 'object' && 'type' in args[0] && !('icon' in args[0])) {
+            args[0] = $.extend({}, args[0], {icon: args[0].type});
+            delete args[0].type;
+        }
+
+        return Swal.fire.apply(Swal, args);
+    };
+    window.swal = $.admin.swal;
     $.admin.toastr = toastr;
     $.admin.grid = new Grid();
 

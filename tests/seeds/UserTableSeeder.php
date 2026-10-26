@@ -8,11 +8,11 @@ class UserTableSeeder extends Seeder
 {
     public function run()
     {
-        factory(\Tests\Models\User::class, 50)
+        \Tests\Models\User::factory()->count(50)
             ->create()
             ->each(function ($u) {
-                $u->profile()->save(factory(\Tests\Models\Profile::class)->make());
-                $u->tags()->saveMany(factory(\Tests\Models\Tag::class, 5)->make());
+                $u->profile()->save(\Tests\Models\Profile::factory()->make());
+                $u->tags()->saveMany(\Tests\Models\Tag::factory()->count(5)->make());
                 $u->data = ['json' => ['field' => random_int(0, 50)]];
             });
     }

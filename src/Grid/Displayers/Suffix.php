@@ -10,8 +10,10 @@ class Suffix extends AbstractDisplayer
             $suffix = $suffix->call($this->row, $this->getValue());
         }
 
+        $value = e($this->getValue());
+
         return <<<HTML
-{$this->getValue()}{$delimiter}{$suffix}
+{$value}{$delimiter}{$suffix}
 HTML;
     }
 }

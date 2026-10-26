@@ -1,0 +1,1 @@
+Sample document 8 used by the upload tests.

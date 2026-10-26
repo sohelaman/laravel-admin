@@ -24,7 +24,7 @@
 var $btn = $('.{{ $btn_class }}');
 var $filter = $('#{{ $filter_id }}');
 
-$btn.unbind('click').click(function (e) {
+$btn.off('click').click(function (e) {
     if ($filter.is(':visible')) {
         $filter.addClass('hide');
     } else {

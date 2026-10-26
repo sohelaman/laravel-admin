@@ -61,11 +61,15 @@ class Pjax
      *
      * @param Response $response
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|Response
      */
     protected function handleErrorResponse(Response $response)
     {
-        $exception = $response->exception;
+        $exception = $response->exception ?? null;
+
+        if (!$exception instanceof \Throwable) {
+            return $response;
+        }
 
         $error = new MessageBag([
             'type'    => get_class($exception),
@@ -140,7 +144,7 @@ class Pjax
     protected function decodeUtf8HtmlEntities($html)
     {
         return preg_replace_callback('/(&#[0-9]+;)/', function ($html) {
-            return mb_convert_encoding($html[1], 'UTF-8', 'HTML-ENTITIES');
+            return mb_decode_numericentity($html[1], [0x0, 0x10FFFF, 0, 0x1FFFFF], 'UTF-8');
         }, $html);
     }
 

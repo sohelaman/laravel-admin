@@ -26,7 +26,8 @@ class Downloadable extends AbstractDisplayer
                 $src = Storage::disk(config('admin.upload.disk'))->url($value);
             }
 
-            $name = basename($value);
+            $name = e(basename($value));
+            $src = e($src);
 
             return <<<HTML
 <a href='$src' download='{$name}' target='_blank' class='text-muted'>

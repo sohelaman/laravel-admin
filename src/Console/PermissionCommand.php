@@ -4,7 +4,7 @@ namespace Encore\Admin\Console;
 
 use Encore\Admin\Auth\Database\Permission;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class PermissionCommand extends Command
@@ -81,7 +81,7 @@ class PermissionCommand extends Command
 
     private function getAllTables()
     {
-        return array_map('current', DB::select('SHOW TABLES'));
+        return array_column(Schema::getTables(), 'name');
     }
 
     private function getIgnoreTables()

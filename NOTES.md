@@ -1,3 +1,4 @@
-# Migration Target
+# Upgradation Target
 - Compatible with Laravel 13
 - Compatible with PHP 8.5
+- Theme and frontend dependencies including jQuery library and plugin updates to safe versions

@@ -38,10 +38,8 @@ class AuthTest extends TestCase
             ->seeLink('laravel-admin-ext/backup', 'https://github.com/laravel-admin-extensions/backup')
             ->seeLink('laravel-admin-ext/media-manager', 'https://github.com/laravel-admin-extensions/media-manager')
 
-            ->see('Dependencies')
-            ->see('php')
-//            ->see('>=7.0.0')
-            ->see('laravel/framework');
+            // The dependency list is read from the composer.json of the host application.
+            ->see('Dependencies');
 
         $this
             ->see('<span>Admin</span>')
@@ -50,6 +48,31 @@ class AuthTest extends TestCase
             ->see('<span>Permission</span>')
             ->see('<span>Operation log</span>')
             ->see('<span>Menu</span>');
+    }
+
+    public function testLoginWithWrongPassword()
+    {
+        $this->visit('admin/auth/login')
+            ->submitForm('Login', ['username' => 'admin', 'password' => 'wrong'])
+            ->seePageIs('admin/auth/login')
+            ->see('These credentials do not match our records.')
+            ->dontSeeIsAuthenticated('admin');
+    }
+
+    public function testLoginIsThrottled()
+    {
+        foreach (range(1, 5) as $attempt) {
+            $this->visit('admin/auth/login')
+                ->submitForm('Login', ['username' => 'admin', 'password' => 'wrong'])
+                ->see('These credentials do not match our records.');
+        }
+
+        // The correct password is refused while the user is locked out.
+        $this->visit('admin/auth/login')
+            ->submitForm('Login', ['username' => 'admin', 'password' => 'admin'])
+            ->seePageIs('admin/auth/login')
+            ->see('Too many login attempts')
+            ->dontSeeIsAuthenticated('admin');
     }
 
     public function testLogout()

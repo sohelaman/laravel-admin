@@ -13,6 +13,11 @@ class Link extends AbstractDisplayer
             $href = $callback ?: $this->value;
         }
 
-        return "<a href='$href' target='$target'>{$this->value}</a>";
+        // links are not allowed to run scripts
+        if (preg_match('/^\s*(javascript|vbscript|data):/i', $href)) {
+            $href = '#';
+        }
+
+        return "<a href='".e($href)."' target='".e($target)."'>".e($this->value).'</a>';
     }
 }

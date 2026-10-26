@@ -1,12 +1,12 @@
 # Installation
 
-> This package requires PHP 7+ and Laravel 5.5, for old versions please refer to [1.4](http://laravel-admin.org/docs/v1.4/#/)
+> This version requires PHP 8.5 and Laravel 13.
 
 First, install laravel, and make sure that the database connection settings are correct.
 
 Then install require this package with command:
 ```
-composer require encore/laravel-admin "1.5.*"
+composer require encore/laravel-admin
 ```
 
 Publish assets and config with command：
@@ -21,7 +21,19 @@ At last run following command to finish install:
 php artisan admin:install
 ```
 
-To check that all is working, run `php artisan serve` and open `http://localhost/admin/` in browser, use username `admin` and password `admin` to login.
+To check that all is working, run `php artisan serve` and open `http://localhost/admin/` in browser, use username `admin` and password `admin` to login. Change this password right after the first login.
+
+The upload disk (`admin` by default) has to be defined in `config/filesystems.php`, for example:
+
+```php
+'admin' => [
+    'driver'     => 'local',
+    'root'       => public_path('uploads'),
+    'visibility' => 'public',
+    'url'        => env('APP_URL').'/uploads',
+    'throw'      => false,
+],
+```
 
 ## Generated files
 

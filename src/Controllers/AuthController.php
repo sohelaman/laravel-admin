@@ -9,8 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -18,6 +20,20 @@ class AuthController extends Controller
      * @var string
      */
     protected $loginView = 'admin::login';
+
+    /**
+     * Maximum number of failed login attempts before the user is locked out.
+     *
+     * @var int
+     */
+    protected $maxLoginAttempts = 5;
+
+    /**
+     * Number of seconds the user is locked out for.
+     *
+     * @var int
+     */
+    protected $lockoutSeconds = 60;
 
     /**
      * Show the login page.
@@ -44,16 +60,50 @@ class AuthController extends Controller
     {
         $this->loginValidator($request->all())->validate();
 
+        $throttleKey = $this->throttleKey($request);
+
+        if (RateLimiter::tooManyAttempts($throttleKey, $this->maxLoginAttempts)) {
+            return back()->withInput()->withErrors([
+                $this->username() => $this->getLockoutMessage(RateLimiter::availableIn($throttleKey)),
+            ]);
+        }
+
         $credentials = $request->only([$this->username(), 'password']);
         $remember = $request->get('remember', false);
 
         if ($this->guard()->attempt($credentials, $remember)) {
+            RateLimiter::clear($throttleKey);
+
             return $this->sendLoginResponse($request);
         }
+
+        RateLimiter::hit($throttleKey, $this->lockoutSeconds);
 
         return back()->withInput()->withErrors([
             $this->username() => $this->getFailedLoginMessage(),
         ]);
+    }
+
+    /**
+     * Get the throttle key of the login request.
+     *
+     * @param Request $request
+     *
+     * @return string
+     */
+    protected function throttleKey(Request $request)
+    {
+        return Str::transliterate(Str::lower((string) $request->input($this->username())).'|'.$request->ip());
+    }
+
+    /**
+     * @param int $seconds
+     *
+     * @return string|\Symfony\Component\Translation\TranslatorInterface
+     */
+    protected function getLockoutMessage($seconds)
+    {
+        return trans('auth.throttle', ['seconds' => $seconds, 'minutes' => ceil($seconds / 60)]);
     }
 
     /**

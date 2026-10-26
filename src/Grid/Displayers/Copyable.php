@@ -35,12 +35,14 @@ SCRIPT;
     {
         $this->addScript();
 
-        $content = $this->getColumn()->getOriginal();
+        $content = e($this->getColumn()->getOriginal());
+
+        $value = e($this->getValue());
 
         return <<<HTML
 <a href="javascript:void(0);" class="grid-column-copyable text-muted" data-content="{$content}" title="Copied!" data-placement="bottom">
     <i class="fa fa-copy"></i>
-</a>&nbsp;{$this->getValue()}
+</a>&nbsp;{$value}
 HTML;
     }
 }

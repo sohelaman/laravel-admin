@@ -10,6 +10,6 @@ class Button extends AbstractDisplayer
             return 'btn-'.$style;
         })->implode(' ');
 
-        return "<span class='btn $style'>{$this->value}</span>";
+        return "<span class='btn $style'>".e($this->value).'</span>';
     }
 }

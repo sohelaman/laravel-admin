@@ -32,12 +32,12 @@ class FileUploadTest extends TestCase
     protected function uploadFiles()
     {
         return $this->visit('admin/files/create')
-            ->attach(__DIR__.'/AuthTest.php', 'file1')
-            ->attach(__DIR__.'/InstallTest.php', 'file2')
-            ->attach(__DIR__.'/IndexTest.php', 'file3')
-            ->attach(__DIR__.'/LaravelTest.php', 'file4')
-            ->attach(__DIR__.'/routes.php', 'file5')
-            ->attach(__DIR__.'/migrations/2016_11_22_093148_create_test_tables.php', 'file6')
+            ->attach(__DIR__.'/assets/document-1.txt', 'file1')
+            ->attach(__DIR__.'/assets/document-2.txt', 'file2')
+            ->attach(__DIR__.'/assets/document-3.txt', 'file3')
+            ->attach(__DIR__.'/assets/document-4.txt', 'file4')
+            ->attach(__DIR__.'/assets/document-5.txt', 'file5')
+            ->attach(__DIR__.'/assets/document-6.txt', 'file6')
             ->press('Submit');
     }
 
@@ -51,12 +51,12 @@ class FileUploadTest extends TestCase
         $this->assertEquals(FileModel::count(), 1);
 
         $where = [
-            'file1' => 'files/AuthTest.php',
-            'file2' => 'files/InstallTest.php',
-            'file3' => 'files/IndexTest.php',
-            'file4' => 'files/LaravelTest.php',
-            'file5' => 'files/routes.php',
-            'file6' => 'files/2016_11_22_093148_create_test_tables.php',
+            'file1' => 'files/document-1.txt',
+            'file2' => 'files/document-2.txt',
+            'file3' => 'files/document-3.txt',
+            'file4' => 'files/document-4.txt',
+            'file5' => 'files/document-5.txt',
+            'file6' => 'files/document-6.txt',
         ];
 
         $this->seeInDatabase('test_files', $where);
@@ -92,9 +92,9 @@ class FileUploadTest extends TestCase
             ->seeInElement('button[type=reset]', 'Reset')
             ->seeInElement('button[type=submit]', 'Submit');
 
-        $this->attach(__DIR__.'/RolesTest.php', 'file3')
-            ->attach(__DIR__.'/MenuTest.php', 'file4')
-            ->attach(__DIR__.'/TestCase.php', 'file5')
+        $this->attach(__DIR__.'/assets/document-7.txt', 'file3')
+            ->attach(__DIR__.'/assets/document-8.txt', 'file4')
+            ->attach(__DIR__.'/assets/document-9.txt', 'file5')
             ->press('Submit');
 
         $new = FileModel::first();
@@ -160,5 +160,36 @@ class FileUploadTest extends TestCase
             ->seeInElement('td', 'svg');
 
         $this->assertEquals(iterator_count($fi), 0);
+    }
+
+    public function testScriptsCanNotBeUploaded()
+    {
+        File::cleanDirectory(public_path('uploads/files'));
+
+        foreach (['shell.php', 'shell.PHP', 'shell.phtml', 'shell.php.jpg', 'shell.jpg.php', '.htaccess'] as $name) {
+            $copy = sys_get_temp_dir().'/'.uniqid().'-'.$name;
+            file_put_contents($copy, "<?php echo 'x';");
+
+            $this->call('POST', '/admin/files', [], [], [
+                'file1' => new \Illuminate\Http\UploadedFile($copy, $name, 'text/plain', null, true),
+            ]);
+
+            @unlink($copy);
+
+            $this->assertEquals(0, FileModel::count(), "{$name} was stored.");
+            $directory = public_path('uploads/files');
+            $written = is_dir($directory) ? array_diff(scandir($directory), ['.', '..']) : [];
+
+            $this->assertSame([], array_values($written), "{$name} was written to the disk.");
+        }
+    }
+
+    public function testDocumentsCanBeUploaded()
+    {
+        File::cleanDirectory(public_path('uploads/files'));
+
+        $this->uploadFiles()->seePageIs('admin/files');
+
+        $this->assertEquals(1, FileModel::count());
     }
 }

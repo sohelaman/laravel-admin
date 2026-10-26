@@ -1,7 +1,6 @@
 laravel-admin
 =====
 
-[![Build Status](https://travis-ci.org/z-song/laravel-admin.svg?branch=master)](https://travis-ci.org/z-song/laravel-admin)
 [![StyleCI](https://styleci.io/repos/48796179/shield)](https://styleci.io/repos/48796179)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/z-song/laravel-admin/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/z-song/laravel-admin/?branch=master)
 [![Packagist](https://img.shields.io/packagist/l/encore/laravel-admin.svg?maxAge=2592000)](https://packagist.org/packages/encore/laravel-admin)
@@ -24,9 +23,9 @@ Screenshots
 Installation
 ------------
 
-> This package requires PHP 7+ and Laravel 5.5, for old versions please refer to [1.4](http://laravel-admin.org/docs/v1.4/#/) 
+> This version requires PHP 8.5 and Laravel 13.
 
-First, install laravel 5.5, and make sure that the database connection settings are correct.
+First, install laravel 13, and make sure that the database connection settings are correct.
 
 ```
 composer require encore/laravel-admin 1.5.*

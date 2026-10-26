@@ -229,3 +229,29 @@ distrobox enter devbox -- composer update --no-interaction
 distrobox enter devbox -- bash -c "find src tests database config -name '*.php' -print0 | xargs -0 -n1 php -d error_reporting=-1 -l 2>&1 | grep -E 'Deprecated|Fatal|Parse'"
 distrobox enter devbox -- vendor/bin/phpunit
 ```
+
+---
+
+## Implementation status (2026-10-26)
+
+Scope applied: Laravel `^13.0`, PHP `^8.5`, Intervention Image `^4.0` with `intervention/image-laravel`. Nothing is committed; all changes are in the working tree.
+
+Result (2026-10-27): `vendor/bin/phpunit` runs **110 tests, 1098 assertions, no failures, no deprecations** on PHP 8.5.11 / Laravel 13.38 with SQLite, and the same suite passes on **MySQL 8.4** (throwaway container, `MYSQL_PORT=33306`); random order is stable. See `OUTCOME.md` for the full test run and review. A `php -l` sweep over `src`, `tests`, `database` and `config` reports nothing; `composer validate --strict` passes.
+
+| Phase | Status | Notes |
+|---|---|---|
+| 0 Decisions | Done | Laravel 13 + PHP 8.5 only; Intervention migrated to 4.x |
+| 1 Test harness | Done | Testbench based `TestCase`, class factories, PHPUnit 13 configuration failing on deprecations/warnings/notices/risky, placeholders instead of credentials in `tests/config/filesystems.php` |
+| 2 Composer | Done | `composer.json` rewritten; `maatwebsite/excel`, `intervention/image-laravel` added to `suggest` |
+| 3 PHP 8.4/8.5 | Done | 37 implicit-nullable parameters, `Tree::$path`, null-to-`strlen`/`isValidUrl`, `HTML-ENTITIES` |
+| 4 Laravel API | Done, one item open | DBAL removed (`ResourceGenerator` uses `Schema::getColumns()`), `admin:permissions` uses `Schema::getTables()`, dead version branches removed, Intervention 4.x, JSON session fix, upload/Pjax guards. **Open:** the console route stubs still use the `'Controller@method'` style (still supported by Laravel 13) |
+| 5 Functional verification | Partial | New tests: console generators and permissions, PJAX, thumbnails, flash messages, login throttling, log redaction. MySQL 8.4 run done (all tests pass). **Not done:** PostgreSQL run, the CI workflow run (set aside), most form field types, tree/orderable grid, nested forms, Excel exporter, Octane |
+| 6 CI, packaging, docs | Mostly done | `.github/workflows/tests.yml` (not executed yet), `.travis.yml` removed, Dependabot weekly, README, `docs/en/installation.md`, `UPGRADE.md`, `CHANGELOG.md`. **Open:** package name/vendor for the fork, version tag |
+| 7 Security | Partly done | Done: SQL injection in the grid sort fixed, `_handle_*` routes restricted to forms/actions/selectables/renderables, script uploads refused (`upload.forbidden_extensions`), operation-log redaction (`operation_log.redact`), login throttling, `password` column `string(255)` for new installs, install-time reminder to change the default password. Front-end libraries inventoried, upgraded and audited (see `docs/frontend-dependency-audit.md`); grid displayers, toastr messages and the carousel id escaped. **Open:** forced password change / random initial password, Bootstrap 3 end-of-life advisory (needs Bootstrap 5), raw-HTML content widgets (`display`, `show` fields, boxes: by design), documentation of the data the admin stores |
+| 8 Release | Not started | Review and remaining items: `OUTCOME.md` |
+
+Verification notes for the reviewer:
+- The package was also exercised in a throwaway Laravel 13 skeleton with a **file session and JSON serialization** (login, flash messages, failed login, user setting). That is how the session issue was found; the test suite alone would not have.
+- Tests that touch the database drop all tables in `tearDown`, but only on `:memory:` or on a database whose name contains `test`.
+- `tests/IndexTest` and `tests/AuthTest` no longer assert on the "dependencies" list: it is read from the host application's `composer.json`, which the Testbench skeleton does not provide.
+- `tests/LaravelTest` was removed: it requested `/` and expected the Laravel welcome page, which a package test app does not have.

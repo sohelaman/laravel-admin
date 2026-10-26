@@ -436,7 +436,9 @@ EOT;
             $this->options(call_user_func($this->options, $this->value, $this));
         }
 
-        $this->options = array_filter($this->options, 'strlen');
+        $this->options = array_filter($this->options, function ($item) {
+            return (string) $item !== '';
+        });
 
         $this->addVariables([
             'options' => $this->options,

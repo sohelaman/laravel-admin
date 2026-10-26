@@ -52,6 +52,8 @@ class InstallCommand extends Command
 
         if ($userModel::count() == 0) {
             $this->call('db:seed', ['--class' => \Encore\Admin\Auth\Database\AdminTablesSeeder::class]);
+
+            $this->line('<comment>The administrator account was created with the default password "admin", change it before going live.</comment>');
         }
     }
 

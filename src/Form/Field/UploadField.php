@@ -75,6 +75,16 @@ trait UploadField
     protected $storagePermission;
 
     /**
+     * Extensions refused when `upload.forbidden_extensions` is not configured.
+     *
+     * @var array
+     */
+    protected static $defaultForbiddenExtensions = [
+        'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'pht', 'phps', 'phar', 'inc',
+        'cgi', 'pl', 'py', 'sh', 'asp', 'aspx', 'jsp', 'jspx', 'exe', 'bat', 'cmd', 'htaccess',
+    ];
+
+    /**
      * @var array
      */
     protected $fileTypes = [
@@ -112,6 +122,7 @@ trait UploadField
     protected function setupDefaultOptions()
     {
         $defaults = [
+            'theme'                => 'gly',
             'overwriteInitial'     => false,
             'initialPreviewAsData' => true,
             'msgPlaceholder'       => trans('admin.choose_file'),
@@ -345,6 +356,8 @@ trait UploadField
      */
     protected function getStoreName(UploadedFile $file)
     {
+        $this->guardExtension($file);
+
         if ($this->useUniqueName) {
             return $this->generateUniqueName($file);
         }
@@ -362,6 +375,30 @@ trait UploadField
         }
 
         return $file->getClientOriginalName();
+    }
+
+    /**
+     * Refuse the files a web server may execute, the name of an upload is chosen by the client.
+     *
+     * Every part of the name is checked (`shell.php.jpg`), the extensions are configured in
+     * `upload.forbidden_extensions` of `config/admin.php`.
+     *
+     * @param UploadedFile $file
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function guardExtension(UploadedFile $file)
+    {
+        $forbidden = array_map('strtolower', (array) config('admin.upload.forbidden_extensions', static::$defaultForbiddenExtensions));
+
+        $parts = array_slice(explode('.', strtolower($file->getClientOriginalName())), 1);
+        $parts[] = strtolower((string) $file->guessExtension());
+
+        if (array_intersect($parts, $forbidden)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                $this->column => [trans('admin.upload_forbidden_extension')],
+            ]);
+        }
     }
 
     /**
@@ -497,7 +534,7 @@ trait UploadField
             $this->destroyThumbnail();
         }
 
-        if (!empty($this->original) && $this->storage->exists($this->original)) {
+        if (!empty($this->original) && $this->storage && $this->storage->exists($this->original)) {
             $this->storage->delete($this->original);
         }
     }

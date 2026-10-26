@@ -14,9 +14,6 @@
 </p>
 
 <p align="center">
-    <a href="https://travis-ci.org/z-song/laravel-admin">
-        <img src="https://travis-ci.org/z-song/laravel-admin.svg?branch=master" alt="Build Status">
-    </a>
     <a href="https://styleci.io/repos/48796179">
         <img src="https://styleci.io/repos/48796179/shield" alt="StyleCI">
     </a>
@@ -51,16 +48,17 @@ Sponsor
 
 Requirements
 ------------
- - PHP >= 7.0.0
- - Laravel >= 5.5.0
+ - PHP ^8.5
+ - Laravel ^13.0
  - Fileinfo PHP Extension
+ - GD or Imagick PHP Extension, and `intervention/image` with `intervention/image-laravel` (`^4.0`) to use image thumbnails and manipulation
 
 Installation
 ------------
 
-> This package requires PHP 7+ and Laravel 5.5, for old versions please refer to [1.4](https://laravel-admin.org/docs/v1.4/#/)
+> This version requires PHP 8.5 and Laravel 13, see [UPGRADE.md](UPGRADE.md) if you come from an older version of the package.
 
-First, install laravel 5.5, and make sure that the database connection settings are correct.
+First, install laravel 13, and make sure that the database connection settings are correct.
 
 ```
 composer require encore/laravel-admin
@@ -78,7 +76,19 @@ At last run following command to finish install.
 php artisan admin:install
 ```
 
-Open `http://localhost/admin/` in browser,use username `admin` and password `admin` to login.
+Open `http://localhost/admin/` in browser,use username `admin` and password `admin` to login. **Change this password right after the first login.**
+
+The upload disk (`admin` by default, see `upload.disk` in `config/admin.php`) has to be defined in `config/filesystems.php`:
+
+```php
+'admin' => [
+    'driver'     => 'local',
+    'root'       => public_path('uploads'),
+    'visibility' => 'public',
+    'url'        => env('APP_URL').'/uploads',
+    'throw'      => false,
+],
+```
 
 Configurations
 ------------

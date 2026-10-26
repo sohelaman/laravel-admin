@@ -27,8 +27,11 @@ JS;
         $original = $this->getColumn()->getOriginal();
 
         if ($value == $original) {
-            return $value;
+            return e($value);
         }
+
+        $value = e($value);
+        $original = e($original);
 
         return <<<HTML
 <div class="limit-text">

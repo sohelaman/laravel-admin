@@ -245,11 +245,11 @@ EOT;
 
         $script = <<<SCRIPT
 
-$('.{$this->grid->getGridRowName()}-delete').unbind('click').click(function() {
+$('.{$this->grid->getGridRowName()}-delete').off('click').click(function() {
 
     var id = $(this).data('id');
 
-    swal({
+    $.admin.swal({
         title: "{$trans['delete_confirm']}",
         type: "warning",
         showCancelButton: true,
@@ -278,9 +278,9 @@ $('.{$this->grid->getGridRowName()}-delete').unbind('click').click(function() {
         var data = result.value;
         if (typeof data === 'object') {
             if (data.status) {
-                swal(data.message, '', 'success');
+                $.admin.swal(data.message, '', 'success');
             } else {
-                swal(data.message, '', 'error');
+                $.admin.swal(data.message, '', 'error');
             }
         }
     });

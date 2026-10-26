@@ -3,9 +3,9 @@
 namespace Encore\Admin\Form\Field;
 
 use Illuminate\Support\Str;
-use Intervention\Image\Constraint;
-use Intervention\Image\Facades\Image as InterventionImage;
-use Intervention\Image\ImageManagerStatic;
+use Intervention\Image\Alignment;
+use Intervention\Image\Direction;
+use Intervention\Image\Laravel\Facades\Image as InterventionImage;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 trait ImageField
@@ -23,6 +23,16 @@ trait ImageField
      * @var array
      */
     protected $thumbnails = [];
+
+    /**
+     * Thumbnail actions of intervention/image 2.x mapped to their 4.x counterpart.
+     *
+     * @var array
+     */
+    protected $thumbnailActions = [
+        'resize' => 'scale',
+        'fit'    => 'cover',
+    ];
 
     /**
      * Default directory for file to upload.
@@ -44,17 +54,36 @@ trait ImageField
     public function callInterventionMethods($target)
     {
         if (!empty($this->interventionCalls)) {
-            $image = ImageManagerStatic::make($target);
+            $image = InterventionImage::decodePath($target);
 
             foreach ($this->interventionCalls as $call) {
                 call_user_func_array(
                     [$image, $call['method']],
-                    $call['arguments']
+                    $this->prepareInterventionArguments($call['method'], $call['arguments'])
                 )->save($target);
             }
         }
 
         return $target;
+    }
+
+    /**
+     * Convert arguments written for intervention/image 2.x to the 4.x signature.
+     *
+     * @param string $method
+     * @param array  $arguments
+     *
+     * @return array
+     */
+    protected function prepareInterventionArguments($method, array $arguments)
+    {
+        if ($method === 'flip' && isset($arguments[0]) && is_string($arguments[0])) {
+            $arguments[0] = in_array($arguments[0], ['v', 'vertical'], true)
+                ? Direction::VERTICAL
+                : Direction::HORIZONTAL;
+        }
+
+        return $arguments;
     }
 
     /**
@@ -73,8 +102,8 @@ trait ImageField
             return $this;
         }
 
-        if (!class_exists(ImageManagerStatic::class)) {
-            throw new \Exception('To use image handling and manipulation, please install [intervention/image] first.');
+        if (!class_exists(InterventionImage::class)) {
+            throw new \Exception('To use image handling and manipulation, please install [intervention/image-laravel] first.');
         }
 
         $this->interventionCalls[] = [
@@ -104,7 +133,7 @@ trait ImageField
      *
      * @return $this
      */
-    public function thumbnail($name, int $width = null, int $height = null)
+    public function thumbnail($name, ?int $width = null, ?int $height = null)
     {
         if (func_num_args() == 1 && is_array($name)) {
             foreach ($name as $key => $size) {
@@ -188,19 +217,22 @@ trait ImageField
             // We merge original name + thumbnail name + extension
             $path = $path.'-'.$name.'.'.$ext;
 
-            /** @var \Intervention\Image\Image $image */
-            $image = InterventionImage::make($file);
+            /** @var \Intervention\Image\Interfaces\ImageInterface $image */
+            $image = InterventionImage::decodePath($file->getRealPath());
 
             $action = $size[2] ?? 'resize';
+            $action = $this->thumbnailActions[$action] ?? $action;
+
             // Resize image with aspect ratio
-            $image->$action($size[0], $size[1], function (Constraint $constraint) {
-                $constraint->aspectRatio();
-            })->resizeCanvas($size[0], $size[1], 'center', false, '#ffffff');
+            $image->$action($size[0], $size[1])
+                ->resizeCanvas($size[0], $size[1], '#ffffff', Alignment::CENTER);
+
+            $contents = $image->encode()->toString();
 
             if (!is_null($this->storagePermission)) {
-                $this->storage->put("{$this->getDirectory()}/{$path}", $image->encode(), $this->storagePermission);
+                $this->storage->put("{$this->getDirectory()}/{$path}", $contents, $this->storagePermission);
             } else {
-                $this->storage->put("{$this->getDirectory()}/{$path}", $image->encode());
+                $this->storage->put("{$this->getDirectory()}/{$path}", $contents);
             }
         }
 

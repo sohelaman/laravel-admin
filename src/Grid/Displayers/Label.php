@@ -3,6 +3,7 @@
 namespace Encore\Admin\Grid\Displayers;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Arr;
 
 class Label extends AbstractDisplayer
@@ -11,6 +12,9 @@ class Label extends AbstractDisplayer
     {
         if ($this->value instanceof Arrayable) {
             $this->value = $this->value->toArray();
+        } elseif ($this->value instanceof Htmlable) {
+            // html written by the developer is not escaped
+            $this->value = [$this->value];
         }
 
         return collect((array) $this->value)->map(function ($item) use ($style) {
@@ -26,7 +30,7 @@ class Label extends AbstractDisplayer
                 }
             }
 
-            return "<span class='label label-{$style}'>$item</span>";
+            return "<span class='label label-{$style}'>".e($item).'</span>';
         })->implode('&nbsp;');
     }
 }

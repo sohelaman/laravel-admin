@@ -12,6 +12,7 @@ class Icon extends Text
 
     protected static $js = [
         '/vendor/laravel-admin/fontawesome-iconpicker/dist/js/fontawesome-iconpicker.min.js',
+        '/vendor/laravel-admin/fontawesome-iconpicker/dist/js/fa4-icons.js',
     ];
 
     public function render()

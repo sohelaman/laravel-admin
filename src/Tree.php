@@ -45,6 +45,13 @@ class Tree implements Renderable
     protected $callback;
 
     /**
+     * Path of the current request.
+     *
+     * @var string
+     */
+    protected $path;
+
+    /**
      * @var null
      */
     protected $branchCallback = null;
@@ -81,7 +88,7 @@ class Tree implements Renderable
      *
      * @param Model|null $model
      */
-    public function __construct(Model $model = null, \Closure $callback = null)
+    public function __construct(?Model $model = null, ?\Closure $callback = null)
     {
         $this->model = $model;
 
@@ -238,7 +245,7 @@ class Tree implements Renderable
 
         $('.tree_branch_delete').click(function() {
             var id = $(this).data('id');
-            swal({
+            $.admin.swal({
                 title: "{$trans['delete_confirm']}",
                 type: "warning",
                 showCancelButton: true,
@@ -267,9 +274,9 @@ class Tree implements Renderable
                 var data = result.value;
                 if (typeof data === 'object') {
                     if (data.status) {
-                        swal(data.message, '', 'success');
+                        $.admin.swal(data.message, '', 'success');
                     } else {
-                        swal(data.message, '', 'error');
+                        $.admin.swal(data.message, '', 'error');
                     }
                 }
             });

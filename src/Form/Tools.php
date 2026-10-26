@@ -221,9 +221,9 @@ HTML;
 
         $script = <<<SCRIPT
 
-$('.{$class}-delete').unbind('click').click(function() {
+$('.{$class}-delete').off('click').click(function() {
 
-    swal({
+    $.admin.swal({
         title: "{$trans['delete_confirm']}",
         type: "warning",
         showCancelButton: true,
@@ -252,9 +252,9 @@ $('.{$class}-delete').unbind('click').click(function() {
         var data = result.value;
         if (typeof data === 'object') {
             if (data.status) {
-                swal(data.message, '', 'success');
+                $.admin.swal(data.message, '', 'success');
             } else {
-                swal(data.message, '', 'error');
+                $.admin.swal(data.message, '', 'error');
             }
         }
     });

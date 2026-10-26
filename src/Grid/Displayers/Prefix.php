@@ -10,8 +10,10 @@ class Prefix extends AbstractDisplayer
             $prefix = $prefix->call($this->row, $this->getValue(), $this->getColumn()->getOriginal());
         }
 
+        $value = e($this->getValue());
+
         return <<<HTML
-{$prefix}{$delimiter}{$this->getValue()}
+{$prefix}{$delimiter}{$value}
 HTML;
     }
 }

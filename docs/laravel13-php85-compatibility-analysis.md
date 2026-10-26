@@ -232,7 +232,7 @@ Consequences:
 | R3 | `PreventRequestForgery` origin check on multi-origin deployments | Low-Medium | High (admin unusable) | Test with `admin.route.domain` and reverse proxies |
 | R4 | JSON session serialization vs flashed `MessageBag` | Medium | Low-Medium | Dedicated test; fall back to arrays if it fails |
 | R5 | Hidden dynamic properties / null-to-string deprecations on 8.5 | Medium | Low | Run the suite with `error_reporting=-1` and fail on deprecations |
-| R6 | MySQL/PostgreSQL behaviour differs from the SQLite smoke test | Medium | Medium | CI matrix with MySQL 8 and PostgreSQL |
+| R6 | MySQL/PostgreSQL behaviour differs from the SQLite smoke test | Medium | Medium | **MySQL 8.4: the suite passes (2026-10-27).** PostgreSQL still to run; CI matrix defined, not executed |
 | R7 | Downstream extensions (laravel-admin-ext/*) break | High | Medium | Out of scope; document breaking changes and keep public method signatures where possible |
 | R8 | Bundled front-end libraries carry known vulnerabilities | High | Medium-High | Separate hardening track (migration plan, Phase 7) |
 
@@ -270,3 +270,27 @@ src/Tree.php:84 (2 params)
 ```
 
 Runtime-only: `src/Tree.php:88` (dynamic property `$path`), `src/Auth/Database/Administrator.php` `getAvatarAttribute` (null into `isValidUrl`).
+
+---
+
+## 7. Findings added during implementation
+
+Items found while doing the work that the static analysis above did not predict or got wrong.
+
+| # | Finding | Status |
+|---|---|---|
+| 1 | **Risk R4 was real.** With Laravel 13's default `session.serialization = json`, the `MessageBag` objects flashed by `admin_toastr()`, `admin_success/error/info/warning()` and `Exception\Handler::error()` come back as arrays, so every page rendered after a flash failed with `Call to a member function get() on array`. Found with a real file-session login against a Laravel 13 skeleton, not by the test suite (the array session driver does not serialize). | Fixed: messages are flashed as arrays and rebuilt with `admin_message_bag()`; regression tests in `FlashMessageTest` |
+| 2 | `registerPublishing()` published translations to `base_path('lang')`, not `lang_path()`. | Fixed |
+| 3 | `Pjax::decodeUtf8HtmlEntities()` used `mb_convert_encoding(..., 'HTML-ENTITIES')` (deprecated since PHP 8.2). | Fixed (`mb_decode_numericentity`) |
+| 4 | `array_filter($x, 'strlen')` in `MultipleSelect`, `Tags` and `Select` passes `null` to `strlen()` (PHP 8.1 deprecation), triggered by the hidden `tags[]` input. | Fixed |
+| 5 | Laravel's error handler swallows deprecations into a log channel, so a green suite proved nothing about them. | Test base class restores PHPUnit's handler and the suite fails on deprecations |
+| 6 | `tests/config/admin.php` was a stale subset of `config/admin.php` (no `auth.excepts`, so the login page redirected to itself). The tests now run against the shipped defaults. The default `grid_action_class` (`DropdownActions`) differs from what the old grid tests assumed; the tests pin the `Actions` displayer. | Fixed in tests |
+| 7 | Some tests asserted on `null` (`$user->postcode` and others read attributes that do not exist on the model); BrowserKit 7 now rejects `null` text. | Fixed in tests |
+| 8 | Laravel 11+ validation messages changed (`The email field must be a valid email address.`), and `UploadedFile::guessExtension()` returns `jpg` instead of `jpeg`. | Tests updated |
+| 9 | `Pjax::fetchContents()` calls `abort(422)` inside a `try/catch (\Exception)` that swallows it: an unknown container silently returns the full page. Pre-existing, left as is and covered by a test. | Documented |
+| 10 | The HTML served to the browser is re-serialized as HTML5 (`multiple="multiple"` becomes `multiple`, `<input />` becomes `<input>`). Harmless, but selectors such as `[multiple=multiple]` no longer match. The source of the re-serialization was not tracked down. | Tests use `[multiple]` |
+| 11 | The Excel exporter references `maatwebsite/excel`, which was never declared. | Added to `suggest` |
+| 12 | The review of 2026-10-27 found three further security defects in the original code: SQL injection through the grid sort parameters, instantiation of arbitrary classes (and reflected XSS) in the `_handle_*` routes, and uploads of executable extensions. All fixed with tests. | Fixed, see `OUTCOME.md` |
+| 13 | Stored XSS in the grid displayers (they printed raw row values). | Fixed, see `docs/frontend-dependency-audit.md` |
+
+No change was needed for Laravel 13 itself in routing, the middleware registration, Eloquent usage or Flysystem usage, apart from items 1 and 2; the later items are defects of the original code.

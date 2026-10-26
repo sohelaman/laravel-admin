@@ -83,3 +83,15 @@ a.editable-empty {
 .file-input .glyphicon-folder-open {
     display: inline;
 }
+
+/* bootstrap-fileinput 5 renders the caption as a read-only input */
+.file-input .file-caption-name.form-control[readonly] {
+    background-color: #fff;
+}
+
+/* select2 4.1 renders the remove button of a choice as a bordered button before the text */
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    border: 0;
+    background: transparent;
+    margin-right: 4px;
+}

@@ -42,6 +42,6 @@ class Handler
     {
         $error = new MessageBag(compact('title', 'message'));
 
-        return session()->flash('error', $error);
+        return session()->flash('error', $error->toArray());
     }
 }

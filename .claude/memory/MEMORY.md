@@ -1,0 +1,5 @@
+- [Project overview](project-overview.md) — fork of laravel-admin 1.8.19 for Laravel 13/PHP 8.5, state and goals
+- [Working rules](user-working-rules.md) — devbox only, no commits/installs, status line, org security rules
+- [Testing workflow](testing-workflow.md) — phpunit commands, MySQL container, strict deprecations
+- [Front-end asset workflow](frontend-asset-workflow.md) — library audit/upgrade process and UI verification setup
+- [Migration guide pointer](migration-guide-for-users.md) — MIGRATING.md facts for projects on 1.8.19

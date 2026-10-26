@@ -65,7 +65,7 @@ trait HasAssets
         'vendor/laravel-admin/font-awesome/css/font-awesome.min.css',
         'vendor/laravel-admin/laravel-admin/laravel-admin.css',
         'vendor/laravel-admin/nprogress/nprogress.css',
-        'vendor/laravel-admin/sweetalert2/dist/sweetalert2.css',
+        'vendor/laravel-admin/sweetalert2/dist/sweetalert2.min.css',
         'vendor/laravel-admin/nestable/nestable.css',
         'vendor/laravel-admin/toastr/build/toastr.min.css',
         'vendor/laravel-admin/bootstrap3-editable/css/bootstrap-editable.css',
@@ -79,7 +79,7 @@ trait HasAssets
     public static $baseJs = [
         'vendor/laravel-admin/AdminLTE/bootstrap/js/bootstrap.min.js',
         'vendor/laravel-admin/AdminLTE/plugins/slimScroll/jquery.slimscroll.min.js',
-        'vendor/laravel-admin/AdminLTE/dist/js/app.min.js',
+        'vendor/laravel-admin/AdminLTE/dist/js/adminlte.min.js',
         'vendor/laravel-admin/jquery-pjax/jquery.pjax.js',
         'vendor/laravel-admin/nprogress/nprogress.js',
         'vendor/laravel-admin/nestable/jquery.nestable.js',
@@ -92,7 +92,7 @@ trait HasAssets
     /**
      * @var string
      */
-    public static $jQuery = 'vendor/laravel-admin/AdminLTE/plugins/jQuery/jQuery-2.1.4.min.js';
+    public static $jQuery = 'vendor/laravel-admin/AdminLTE/plugins/jQuery/jQuery-3.7.1.min.js';
 
     /**
      * @var array

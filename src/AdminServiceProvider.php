@@ -116,28 +116,20 @@ class AdminServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([__DIR__.'/../config' => config_path()], 'laravel-admin-config');
-            if (version_compare($this->app->version(), '9.0.0', '>=')) {
-                $this->publishes([__DIR__.'/../resources/lang' => base_path('lang')], 'laravel-admin-lang');
-            } else {
-                $this->publishes([__DIR__.'/../resources/lang' => resource_path('lang')], 'laravel-admin-lang');
-            }
+            $this->publishes([__DIR__.'/../resources/lang' => lang_path()], 'laravel-admin-lang');
             $this->publishes([__DIR__.'/../database/migrations' => database_path('migrations')], 'laravel-admin-migrations');
             $this->publishes([__DIR__.'/../resources/assets' => public_path('vendor/laravel-admin')], 'laravel-admin-assets');
         }
     }
 
     /**
-     * Remove default feature of double encoding enable in laravel 5.6 or later.
+     * Remove default feature of double encoding enable.
      *
      * @return void
      */
     protected function compatibleBlade()
     {
-        $reflectionClass = new \ReflectionClass('\Illuminate\View\Compilers\BladeCompiler');
-
-        if ($reflectionClass->hasMethod('withoutDoubleEncoding')) {
-            Blade::withoutDoubleEncoding();
-        }
+        Blade::withoutDoubleEncoding();
     }
 
     /**

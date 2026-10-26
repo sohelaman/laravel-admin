@@ -76,7 +76,7 @@ if (!function_exists('admin_toastr')) {
     {
         $toastr = new MessageBag(get_defined_vars());
 
-        session()->flash('toastr', $toastr);
+        session()->flash('toastr', $toastr->toArray());
     }
 }
 
@@ -135,7 +135,7 @@ if (!function_exists('admin_info')) {
     {
         $message = new MessageBag(get_defined_vars());
 
-        session()->flash($type, $message);
+        session()->flash($type, $message->toArray());
     }
 }
 
@@ -149,6 +149,27 @@ if (!function_exists('admin_asset')) {
     function admin_asset($path)
     {
         return (config('admin.https') || config('admin.secure')) ? secure_asset($path) : asset($path);
+    }
+}
+
+if (!function_exists('admin_message_bag')) {
+
+    /**
+     * Get a message bag from the message flashed to the session.
+     *
+     * The messages are stored as arrays, because the session may be serialized as json.
+     *
+     * @param mixed $messages
+     *
+     * @return MessageBag
+     */
+    function admin_message_bag($messages)
+    {
+        if ($messages instanceof \Illuminate\Contracts\Support\MessageBag) {
+            return $messages;
+        }
+
+        return new MessageBag((array) $messages);
     }
 }
 

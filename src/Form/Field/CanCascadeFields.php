@@ -186,7 +186,7 @@ trait CanCascadeFields
 ;(function () {
     var operator_table = {
         '=': function(a, b) {
-            if ($.isArray(a) && $.isArray(b)) {
+            if (Array.isArray(a) && Array.isArray(b)) {
                 return $(a).not(b).length === 0 && $(b).not(a).length === 0;
             }
 
@@ -197,7 +197,7 @@ trait CanCascadeFields
         '>=': function(a, b) { return a >= b; },
         '<=': function(a, b) { return a <= b; },
         '!=': function(a, b) {
-             if ($.isArray(a) && $.isArray(b)) {
+             if (Array.isArray(a) && Array.isArray(b)) {
                 return !($(a).not(b).length === 0 && $(b).not(a).length === 0);
              }
 

@@ -69,7 +69,9 @@ class Tags extends Field
             $this->value = explode(',', $this->value);
         }
 
-        $this->value = array_filter((array) $this->value, 'strlen');
+        $this->value = array_filter((array) $this->value, function ($item) {
+            return (string) $item !== '';
+        });
     }
 
     /**
@@ -156,7 +158,9 @@ class Tags extends Field
      */
     public function prepare($value)
     {
-        $value = array_filter($value, 'strlen');
+        $value = array_filter($value, function ($item) {
+            return (string) $item !== '';
+        });
 
         if ($this->keyAsValue) {
             return is_null($this->saveAction) ? $value : ($this->saveAction)($value);

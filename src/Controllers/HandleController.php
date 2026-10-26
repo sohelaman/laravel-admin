@@ -6,6 +6,7 @@ use Encore\Admin\Actions\Action;
 use Encore\Admin\Actions\GridAction;
 use Encore\Admin\Actions\Response;
 use Encore\Admin\Actions\RowAction;
+use Encore\Admin\Grid\Selectable;
 use Encore\Admin\Widgets\Form;
 use Exception;
 use Illuminate\Contracts\Support\Renderable;
@@ -47,8 +48,9 @@ class HandleController extends Controller
 
         $formClass = $request->get('_form_');
 
-        if (!class_exists($formClass)) {
-            throw new Exception("Form [{$formClass}] does not exist.");
+        // The class comes from the request, only forms can be resolved.
+        if (!is_string($formClass) || !class_exists($formClass) || !is_subclass_of($formClass, Form::class)) {
+            throw new Exception('Form ['.e($formClass).'] does not exist.');
         }
 
         /** @var Form $form */
@@ -112,10 +114,11 @@ class HandleController extends Controller
             throw new Exception('Invalid action request.');
         }
 
-        $actionClass = str_replace('_', '\\', $request->get('_action'));
+        $actionClass = str_replace('_', '\\', (string) $request->get('_action'));
 
-        if (!class_exists($actionClass)) {
-            throw new Exception("Form [{$actionClass}] does not exist.");
+        // The class comes from the request, only actions can be resolved.
+        if (!class_exists($actionClass) || !is_subclass_of($actionClass, Action::class)) {
+            throw new Exception('Action ['.e($actionClass).'] does not exist.');
         }
 
         /** @var GridAction $form */
@@ -155,16 +158,15 @@ class HandleController extends Controller
         $class = $request->get('selectable');
         $args = $request->get('args', []);
 
-        $class = str_replace('_', '\\', $class);
+        $class = str_replace('_', '\\', (string) $class);
 
-        if (class_exists($class)) {
-            /** @var \Encore\Admin\Grid\Selectable $selectable */
-            $selectable = new $class(...array_values($args));
+        // The class comes from the request, only selectables can be created.
+        abort_unless(class_exists($class) && is_subclass_of($class, Selectable::class), 404);
 
-            return $selectable->render();
-        }
+        /** @var Selectable $selectable */
+        $selectable = new $class(...array_values((array) $args));
 
-        return $class;
+        return $selectable->render();
     }
 
     /**
@@ -177,15 +179,14 @@ class HandleController extends Controller
         $class = $request->get('renderable');
         $key = $request->get('key');
 
-        $class = str_replace('_', '\\', $class);
+        $class = str_replace('_', '\\', (string) $class);
 
-        if (class_exists($class)) {
-            /** @var Renderable $selectable */
-            $renderable = new $class();
+        // The class comes from the request, only renderables can be created.
+        abort_unless(class_exists($class) && is_subclass_of($class, Renderable::class), 404);
 
-            return $renderable->render($key);
-        }
+        /** @var Renderable $renderable */
+        $renderable = new $class();
 
-        return $class;
+        return $renderable->render($key);
     }
 }

@@ -10,6 +10,13 @@ use Illuminate\Support\Str;
 class LogOperation
 {
     /**
+     * The input that is never written to the log, whatever the configuration is.
+     *
+     * @var array
+     */
+    protected $redacted = ['password', 'password_confirmation', 'current_password', '_token'];
+
+    /**
      * Handle an incoming request.
      *
      * @param \Illuminate\Http\Request $request
@@ -25,7 +32,7 @@ class LogOperation
                 'path'    => substr($request->path(), 0, 255),
                 'method'  => $request->method(),
                 'ip'      => $request->getClientIp(),
-                'input'   => json_encode($request->input()),
+                'input'   => json_encode($this->redact($request->input())),
             ];
 
             try {
@@ -36,6 +43,28 @@ class LogOperation
         }
 
         return $next($request);
+    }
+
+    /**
+     * Mask the sensitive values of the input, nested values included.
+     *
+     * @param array $input
+     *
+     * @return array
+     */
+    protected function redact(array $input)
+    {
+        $keys = array_map('strtolower', array_merge($this->redacted, (array) config('admin.operation_log.redact', [])));
+
+        foreach ($input as $key => $value) {
+            if (in_array(strtolower((string) $key), $keys, true)) {
+                $input[$key] = '******';
+            } elseif (is_array($value)) {
+                $input[$key] = $this->redact($value);
+            }
+        }
+
+        return $input;
     }
 
     /**

@@ -160,6 +160,13 @@ return [
             'image' => 'images',
             'file'  => 'files',
         ],
+
+        // Files with one of these extensions (any part of the name, `shell.php.jpg` included) are refused.
+        // The default list contains the scripts and executables of the usual web servers.
+        'forbidden_extensions' => [
+            'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'pht', 'phps', 'phar', 'inc',
+            'cgi', 'pl', 'py', 'sh', 'asp', 'aspx', 'jsp', 'jspx', 'exe', 'bat', 'cmd', 'htaccess',
+        ],
     ],
 
     /*
@@ -215,6 +222,12 @@ return [
          * Only logging allowed methods in the list
          */
         'allowed_methods' => ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'],
+
+        /*
+         * Input fields whose values are masked in the log, in addition to
+         * `password`, `password_confirmation`, `current_password` and `_token`.
+         */
+        'redact' => [],
 
         /*
          * Routes that will not log to database.

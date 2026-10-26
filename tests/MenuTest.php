@@ -16,7 +16,7 @@ class MenuTest extends TestCase
     {
         $this->visit('admin/auth/menu')
             ->see('Menu')
-            ->see('Index')
+            ->see('List')
             ->see('Auth')
             ->see('Users')
             ->see('Roles')

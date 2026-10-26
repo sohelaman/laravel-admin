@@ -43,6 +43,31 @@ class OperationLogTest extends TestCase
         $this->assertEquals(4, OperationLog::count());
     }
 
+    public function testSensitiveInputIsNotLogged()
+    {
+        config(['admin.operation_log.redact' => ['secret_code', 'password_array']]);
+
+        $this->call('POST', 'admin/auth/users', [
+            'username'              => 'logged',
+            'name'                  => 'Logged User',
+            'password'              => 'plain-text-password',
+            'password_confirmation' => 'plain-text-password',
+            'secret_code'           => '123456',
+            'nested'                => ['password' => 'nested-password'],
+            'password_array'        => ['array-password'],
+        ]);
+
+        $log = OperationLog::where('method', 'POST')->first();
+
+        $this->assertNotNull($log);
+        $this->assertStringContainsString('Logged User', $log->input);
+        $this->assertStringNotContainsString('plain-text-password', $log->input);
+        $this->assertStringNotContainsString('nested-password', $log->input);
+        $this->assertStringNotContainsString('array-password', $log->input);
+        $this->assertStringNotContainsString('123456', $log->input);
+        $this->assertStringContainsString('******', $log->input);
+    }
+
     public function testDeleteLogs()
     {
         $table = config('admin.database.operation_log_table');

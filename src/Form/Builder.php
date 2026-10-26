@@ -230,7 +230,7 @@ class Builder
      *
      * @return string
      */
-    public function getResource(int $slice = null): string
+    public function getResource(?int $slice = null): string
     {
         if ($this->mode === self::MODE_CREATE) {
             return $this->form->resource(-1);
@@ -544,7 +544,7 @@ class Builder
 $('form.{$this->formClass} button[type=submit]').click(function (e) {
     e.preventDefault();
     var form = $(this).parents('form');
-    swal({
+    $.admin.swal({
         title: "$message",
         type: "warning",
         showCancelButton: true,

@@ -99,7 +99,7 @@ class Model
      * @param EloquentModel $model
      * @param Grid          $grid
      */
-    public function __construct(EloquentModel $model, Grid $grid = null)
+    public function __construct(EloquentModel $model, ?Grid $grid = null)
     {
         $this->model = $model;
 
@@ -279,7 +279,7 @@ class Model
      *
      * @return $this
      */
-    public function collection(\Closure $callback = null)
+    public function collection(?\Closure $callback = null)
     {
         $this->collectionCallback = $callback;
 
@@ -525,6 +525,20 @@ class Model
             return;
         }
 
+        // The sort is written in the query, only accept what is a column (or a path in a json column).
+        if (!is_string($columnName) || !is_string($this->sort['type'])
+            || !preg_match('/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)*$/', $columnName)
+            || !in_array(strtolower($this->sort['type']), ['asc', 'desc'], true)
+        ) {
+            return;
+        }
+
+        $this->sort['type'] = strtolower($this->sort['type']);
+
+        if (!empty($this->sort['cast']) && !preg_match('/^(signed|unsigned|char|binary|date|datetime|time|json|decimal(\(\d+(,\d+)?\))?)$/i', (string) $this->sort['cast'])) {
+            unset($this->sort['cast']);
+        }
+
         $columnNameContainsDots = Str::contains($columnName, '.');
         $isRelation = $this->queries->contains(function ($query) use ($columnName) {
             // relationship should be camel case
@@ -632,11 +646,9 @@ class Model
         $relatedTable = $relation->getRelated()->getTable();
 
         if ($relation instanceof BelongsTo) {
-            $foreignKeyMethod = version_compare(app()->version(), '5.8.0', '<') ? 'getForeignKey' : 'getForeignKeyName';
-
             return [
                 $relatedTable,
-                $relation->{$foreignKeyMethod}(),
+                $relation->getForeignKeyName(),
                 '=',
                 $relatedTable.'.'.$relation->getRelated()->getKeyName(),
             ];

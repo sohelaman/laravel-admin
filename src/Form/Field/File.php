@@ -17,7 +17,7 @@ class File extends Field
      * @var array
      */
     protected static $css = [
-        '/vendor/laravel-admin/bootstrap-fileinput/css/fileinput.min.css?v=4.5.2',
+        '/vendor/laravel-admin/bootstrap-fileinput/css/fileinput.min.css?v=5.5.4',
     ];
 
     /**
@@ -26,8 +26,10 @@ class File extends Field
      * @var array
      */
     protected static $js = [
-        '/vendor/laravel-admin/bootstrap-fileinput/js/plugins/canvas-to-blob.min.js',
-        '/vendor/laravel-admin/bootstrap-fileinput/js/fileinput.min.js?v=4.5.2',
+        '/vendor/laravel-admin/bootstrap-fileinput/js/plugins/piexif.min.js',
+        '/vendor/laravel-admin/bootstrap-fileinput/js/plugins/purify.min.js',
+        '/vendor/laravel-admin/bootstrap-fileinput/js/fileinput.min.js?v=5.5.4',
+        '/vendor/laravel-admin/bootstrap-fileinput/themes/gly/theme.min.js?v=5.5.4',
     ];
 
     /**
@@ -208,7 +210,7 @@ $("input{$this->getElementClassSelector()}").on('filebeforedelete', function() {
 
         var remove = resolve;
 
-        swal({
+        $.admin.swal({
             title: "{$text['title']}",
             type: "warning",
             showCancelButton: true,

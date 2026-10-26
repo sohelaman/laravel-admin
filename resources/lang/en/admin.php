@@ -56,6 +56,7 @@ return [
     'login_successful'      => 'Login successful',
     'choose'                => 'Choose',
     'choose_file'           => 'Select file',
+    'upload_forbidden_extension' => 'This type of file can not be uploaded.',
     'choose_image'          => 'Select image',
     'more'                  => 'More',
     'deny'                  => 'Permission denied',
